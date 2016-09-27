@@ -12,7 +12,7 @@ Fastbreak is used heavily and is stable internally at Nike, however the wider co
 
 ## [0.9.0](https://github.com/Nike-Inc/fastbreak/releases/tag/fastbreak-v0.9.0)
 
-Released on ####-##-## (TBD).
+Released on 2016-09-26.
 
 ### Added
 
