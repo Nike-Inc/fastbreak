@@ -1,3 +1,5 @@
+<img src="fastbreak_logo.png" />
+
 # Fastbreak - A Simple Java-8-Native Circuit Breaker
 
 [ ![Download](https://api.bintray.com/packages/nike/maven/fastbreak/images/download.svg) ](https://bintray.com/nike/maven/fastbreak/_latestVersion)
