@@ -4,6 +4,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -13,6 +15,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -27,16 +30,18 @@ import static org.mockito.Mockito.verify;
 public class CircuitBreakerDelegateTest {
 
     private CircuitBreaker<String> delegateMock;
+    private CircuitBreaker.ManualModeTask<String> delegateManualModeTaskMock;
     private final Function<Integer, String> eventConverter = String::valueOf;
-    private final Function<Integer, String> explodingEventConverter = theInt -> {
-        throw new RuntimeException("kaboom");
-    };
     private CircuitBreakerDelegate<Integer, String> wrapper;
+    private CircuitBreaker.ManualModeTask<Integer> wrapperManualModeTask;
 
     @Before
     public void beforeMethod() {
         delegateMock = mock(CircuitBreaker.class);
+        delegateManualModeTaskMock = mock(CircuitBreaker.ManualModeTask.class);
+        doReturn(delegateManualModeTaskMock).when(delegateMock).newManualModeTask();
         wrapper = new CircuitBreakerDelegate<>(delegateMock, eventConverter);
+        wrapperManualModeTask = wrapper.newManualModeTask();
     }
 
     @Test
@@ -50,12 +55,26 @@ public class CircuitBreakerDelegateTest {
     }
 
     @Test
-    public void throwExceptionIfCircuitBreakerIsOpen_should_call_delegate_method() {
+    public void newManualModeTask_returns_instance_of_DelegateManualModeTask_with_correct_fields() {
         // when
-        wrapper.throwExceptionIfCircuitBreakerIsOpen();
+        CircuitBreaker.ManualModeTask<Integer> manualTask = wrapper.newManualModeTask();
 
         // then
-        verify(delegateMock).throwExceptionIfCircuitBreakerIsOpen();
+        assertThat(manualTask).isInstanceOf(CircuitBreakerDelegate.DelegateManualModeTask.class);
+        CircuitBreakerDelegate.DelegateManualModeTask dmmt = (CircuitBreakerDelegate.DelegateManualModeTask)manualTask;
+        assertThat(dmmt.delegate).isSameAs(delegateManualModeTaskMock);
+        assertThat(dmmt.eventConverter).isSameAs(wrapper.eventConverter);
+        assertThat(dmmt.originatingCircuitBreaker).isSameAs(wrapper);
+        assertThat(dmmt.originatingCircuitBreaker()).isSameAs(wrapper);
+    }
+
+    @Test
+    public void throwExceptionIfCircuitBreakerIsOpen_should_call_delegate_method() {
+        // when
+        wrapperManualModeTask.throwExceptionIfCircuitBreakerIsOpen();
+
+        // then
+        verify(delegateManualModeTaskMock).throwExceptionIfCircuitBreakerIsOpen();
     }
 
     @Test
@@ -64,36 +83,43 @@ public class CircuitBreakerDelegateTest {
         int event = 42;
 
         // when
-        wrapper.handleEvent(event);
+        wrapperManualModeTask.handleEvent(event);
 
         // then
-        verify(delegateMock).handleEvent(eventConverter.apply(event));
+        verify(delegateManualModeTaskMock).handleEvent(eventConverter.apply(event));
     }
 
     @Test
     public void handleEvent_should_not_explode_if_eventConverter_explodes() {
         // given
+        final Set<Boolean> explosionHappenedContainer = new HashSet<>();
+        Function<Integer, String> explodingEventConverter = theInt -> {
+            explosionHappenedContainer.add(true);
+            throw new RuntimeException("kaboom");
+        };
         CircuitBreakerDelegate<Integer, String> badCb =
             new CircuitBreakerDelegate<>(delegateMock, explodingEventConverter);
+        CircuitBreaker.ManualModeTask<Integer> badCbManualModeTask = badCb.newManualModeTask();
 
         // when
-        Throwable cbExplosion = catchThrowable(() -> badCb.handleEvent(42));
+        Throwable cbExplosion = catchThrowable(() -> badCbManualModeTask.handleEvent(42));
 
         // then
-        verify(delegateMock, times(0)).handleEvent(anyString());
+        assertThat(explosionHappenedContainer).contains(true);
+        verify(delegateManualModeTaskMock, times(0)).handleEvent(anyString());
         assertThat(cbExplosion).isNull();
     }
 
     @Test
     public void handleEvent_should_not_explode_if_delegate_explodes() {
         // given
-        doThrow(new RuntimeException("splat")).when(delegateMock).handleEvent(anyString());
+        doThrow(new RuntimeException("splat")).when(delegateManualModeTaskMock).handleEvent(anyString());
 
         // when
-        Throwable cbExplosion = catchThrowable(() -> wrapper.handleEvent(42));
+        Throwable cbExplosion = catchThrowable(() -> wrapperManualModeTask.handleEvent(42));
 
         // then
-        verify(delegateMock).handleEvent(anyString());
+        verify(delegateManualModeTaskMock).handleEvent(anyString());
         assertThat(cbExplosion).isNull();
     }
 
@@ -103,22 +129,22 @@ public class CircuitBreakerDelegateTest {
         Throwable error = mock(Throwable.class);
 
         // when
-        wrapper.handleException(error);
+        wrapperManualModeTask.handleException(error);
 
         // then
-        verify(delegateMock).handleException(error);
+        verify(delegateManualModeTaskMock).handleException(error);
     }
 
     @Test
     public void handleException_should_not_explode_if_delegate_explodes() {
         // given
-        doThrow(new RuntimeException("splat")).when(delegateMock).handleException(any());
+        doThrow(new RuntimeException("splat")).when(delegateManualModeTaskMock).handleException(any());
 
         // when
-        Throwable cbExplosion = catchThrowable(() -> wrapper.handleException(new Throwable()));
+        Throwable cbExplosion = catchThrowable(() -> wrapperManualModeTask.handleException(new Throwable()));
 
         // then
-        verify(delegateMock).handleException(any());
+        verify(delegateManualModeTaskMock).handleException(any());
         assertThat(cbExplosion).isNull();
     }
 

@@ -67,7 +67,7 @@ import java.util.function.Supplier;
  * @author Nic Munroe
  */
 @SuppressWarnings({"WeakerAccess", "OptionalUsedAsFieldOrParameterType"})
-public class CircuitBreakerImpl<ET> implements CircuitBreaker<ET> {
+public class CircuitBreakerImpl<ET> implements CircuitBreaker<ET>, CircuitBreaker.ManualModeTask<ET> {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -287,6 +287,14 @@ public class CircuitBreakerImpl<ET> implements CircuitBreaker<ET> {
     }
 
     @Override
+    public ManualModeTask<ET> newManualModeTask() {
+        // This CircuitBreaker implementation does not have any state that matters on a per-task basis, so we are safe
+        //      to implement ManualModeTask at the CircuitBreaker level and save the cost of creating new ManualModeTask
+        //      objects every time this method is called.
+        return this;
+    }
+
+    @Override
     public void throwExceptionIfCircuitBreakerIsOpen() throws CircuitBreakerOpenException {
         // If the circuit is closed then there's no need for an exception
         if (State.CLOSED.equals(currentState))
@@ -353,6 +361,11 @@ public class CircuitBreakerImpl<ET> implements CircuitBreaker<ET> {
                 + "malfunctioning, but since this method should never throw an exception it will be swallowed.", t
             );
         }
+    }
+
+    @Override
+    public CircuitBreaker<ET> originatingCircuitBreaker() {
+        return this;
     }
 
     @Override
