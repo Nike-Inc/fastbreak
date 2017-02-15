@@ -60,34 +60,8 @@ public class CircuitBreakerDelegate<ET, Del_ET> implements CircuitBreaker<ET> {
     }
 
     @Override
-    public void throwExceptionIfCircuitBreakerIsOpen() throws CircuitBreakerOpenException {
-        delegate.throwExceptionIfCircuitBreakerIsOpen();
-    }
-
-    @Override
-    public void handleEvent(ET event) {
-        try {
-            delegate.handleEvent(eventConverter.apply(event));
-        }
-        catch (Throwable t) {
-            logger.error(
-                "Unexpected exception caught while trying to handleEvent(...). This indicates the CircuitBreaker is "
-                + "malfunctioning, but since this method should never throw an exception it will be swallowed.", t
-            );
-        }
-    }
-
-    @Override
-    public void handleException(Throwable throwable) {
-        try {
-            delegate.handleException(throwable);
-        }
-        catch (Throwable t) {
-            logger.error(
-                "Unexpected exception caught while trying to handleException(...). This indicates the CircuitBreaker is "
-                + "malfunctioning, but since this method should never throw an exception it will be swallowed.", t
-            );
-        }
+    public ManualModeTask<ET> newManualModeTask() {
+        return new DelegateManualModeTask<>(delegate.newManualModeTask(), eventConverter, this);
     }
 
     @Override
@@ -148,5 +122,57 @@ public class CircuitBreakerDelegate<ET, Del_ET> implements CircuitBreaker<ET> {
 
     protected static class EventHolder<T> {
         public T event = null;
+    }
+
+    protected static class DelegateManualModeTask<ET, Del_ET> implements ManualModeTask<ET> {
+        protected final ManualModeTask<Del_ET> delegate;
+        protected final Function<ET, Del_ET> eventConverter;
+        protected final CircuitBreakerDelegate<ET, Del_ET> originatingCircuitBreaker;
+
+        public DelegateManualModeTask(ManualModeTask<Del_ET> delegate, Function<ET, Del_ET> eventConverter,
+                                      CircuitBreakerDelegate<ET, Del_ET> originatingCircuitBreaker) {
+            this.delegate = delegate;
+            this.eventConverter = eventConverter;
+            this.originatingCircuitBreaker = originatingCircuitBreaker;
+        }
+
+        @Override
+        public void throwExceptionIfCircuitBreakerIsOpen() throws CircuitBreakerOpenException {
+            delegate.throwExceptionIfCircuitBreakerIsOpen();
+        }
+
+        @Override
+        public void handleEvent(ET event) {
+            try {
+                delegate.handleEvent(eventConverter.apply(event));
+            }
+            catch (Throwable t) {
+                logger.error(
+                    "Unexpected exception caught while trying to handleEvent(...). This indicates the CircuitBreaker "
+                    + "is malfunctioning, but since this method should never throw an exception it will be swallowed.",
+                    t
+                );
+            }
+        }
+
+        @Override
+        public void handleException(Throwable throwable) {
+            try {
+                delegate.handleException(throwable);
+            }
+            catch (Throwable t) {
+                logger.error(
+                    "Unexpected exception caught while trying to handleException(...). This indicates the "
+                    + "CircuitBreaker is malfunctioning, but since this method should never throw an exception it will "
+                    + "be swallowed.",
+                    t
+                );
+            }
+        }
+
+        @Override
+        public CircuitBreaker<ET> originatingCircuitBreaker() {
+            return originatingCircuitBreaker;
+        }
     }
 }

@@ -14,7 +14,7 @@ Fastbreak is a simple but powerful circuit breaker with default behavior inspire
 
 * **Asynchronous Future Mode** - If you have an asynchronous task represented by a `CompletableFuture` that should be protected with a circuit breaker you can do so by passing the future into `CircuitBreaker`'s `executeAsyncCall(Supplier<CompletableFuture<ET>>)` method. This is the recommended way to use Fastbreak when possible. 
 * **Synchronous Mode** - You can protect a synchronous blocking task with a circuit breaker by calling `CircuitBreaker`'s `executeBlockingCall(Callable<ET> eventSupplier)` method. This has some drawbacks when compared with the asynchronous future mode but can be trivially converted to asynchronous future mode by wrapping the task in a `CompletableFuture` and calling `executeAsyncCall(Supplier<CompletableFuture<ET>>)` instead.
-* **Asynchronous Callback Mode, a.k.a. Manual Mode** - There are some situations where you cannot wrap a task in a `CompletableFuture` or `Callable`, such as some asynchronous workflows that rely on callbacks. Fastbreak still allows you to protect these tasks with a circuit breaker by exposing the important methods and letting you call them manually at the appropriate time: `throwExceptionIfCircuitBreakerIsOpen()`, `handleEvent(ET)`, and `handleException(Throwable)`. 
+* **Asynchronous Callback Mode, a.k.a. Manual Mode** - There are some situations where you cannot wrap a task in a `CompletableFuture` or `Callable`, such as some asynchronous workflows that rely on callbacks. Fastbreak still allows you to protect these tasks with a circuit breaker by exposing the important methods and letting you call them manually at the appropriate time. You can do so by calling `CircuitBreaker.newManualModeTask()` to get a `ManualModeTask` and use its methods: `throwExceptionIfCircuitBreakerIsOpen()`, `handleEvent(ET)`, and `handleException(Throwable)`. 
 
 <a name="quickstart"></a>
 ## Quickstart
@@ -121,7 +121,7 @@ CompletableFuture<TaskResult> resultFuture = exampleCircuitBreaker.executeAsyncC
 );
 ```
 
-Just keep in mind that the thread pool underlying the default `CompletableFuture.supplyAsync(Supplier)` is limited, so you might starve that threadpool and create an artifical bottleneck depending on how long `taskService::performBlockingTask` takes and the kind of throughput you need. You can always use `CompletableFuture.supplyAsync(Supplier, Executor)` instead and pass in whatever `Executor` you want to fully control the threading behavior. 
+Just keep in mind that the thread pool underlying the default `CompletableFuture.supplyAsync(Supplier)` is limited, so you might starve that threadpool and create an artificial bottleneck depending on how long `taskService::performBlockingTask` takes and the kind of throughput you need. You can always use `CompletableFuture.supplyAsync(Supplier, Executor)` instead and pass in whatever `Executor` you want to fully control the threading behavior. 
 
 ### Asynchronous Callback Mode, a.k.a. Manual Mode
 
@@ -143,26 +143,28 @@ public void performAsyncTaskWithCallback(Consumer<TaskResult> resultCallback,
 You can protect this scenario with the circuit breaker defined above by doing something like this:
 
 ``` java
+// Get a manual mode task from the circuit breaker.
+ManualModeTask cbManualModeTask = exampleCircuitBreaker.newManualModeTask();
 // Allow the circuit breaker to throw a CircuitBreakerOpenException if the circuit is OPEN.
-exampleCircuitBreaker.throwExceptionIfCircuitBreakerIsOpen();
+cbManualModeTask.throwExceptionIfCircuitBreakerIsOpen();
 // If we reach here then the circuit is CLOSED or HALF-OPEN (to allow a single healthcheck call through).
 //      In either case we can execute the task.
 taskService.performAsyncTaskWithCallback(
     taskResult -> {
         // Tell the circuit breaker about the TaskResult event so it can contribute to the circuit
         //      breaker's state.
-        exampleCircuitBreaker.handleEvent(taskResult);
+        cbManualModeTask.handleEvent(taskResult);
         // ... taskResult processing goes here ...
     },
     error -> {
         // Tell the circuit breaker about the error so it can contribute to the circuit breaker's state.
-        exampleCircuitBreaker.handleException(error);
+        cbManualModeTask.handleException(error);
         // ... error processing goes here ...
     }
 );
 ```
 
-There are many different ways to handle callback scenarios - the event and error consumers might be defined elsewhere, they might be method references, you might need to pass the circuit breaker around and weave the `handleEvent` and `handleException` calls into your code manually in other ways, etc. But as long as you're careful and don't let the result fall through the cracks without updating the circuit breaker with a `handleEvent` or `handleException` method call, then the circuit breaker will work just fine.
+There are many different ways to handle callback scenarios - the event and error consumers might be defined elsewhere, they might be method references, you might need to pass the circuit breaker's `ManualModeTask` around and weave the `handleEvent` and `handleException` calls into your code manually in other ways, etc. But as long as you're careful and don't let the result fall through the cracks without updating the `ManualModeTask` with a `handleEvent` or `handleException` method call, then the circuit breaker will work just fine.
 
 This mode requires the most diligence on the application developer's part to implement correctly but it also provides the most flexibility and allows you to protect virtually anything with a circuit breaker.
 
@@ -189,7 +191,7 @@ You can be notified of state changes for Fastbreak circuit breakers by registeri
 
 ## Fastbreak `CircuitBreaker` Implementations
 
-The Fastbreak `CircuitBreaker` class is an interface defining the API contract all Fastbreak circuit breakers must follow, allowing multiple different implementations. You can write your own if needed (please consider [contributing](CONTRIBUTING.md) back to this project if the result is potentially reusable by others), however Fastbreak includes several implementations that cover most use cases: 
+The Fastbreak `CircuitBreaker` class is an interface defining the API contract all Fastbreak circuit breakers must follow, allowing multiple different implementations. You can write your own if needed (please consider [contributing](CONTRIBUTING.md) back to this project if the result is potentially reusable by others), however Fastbreak includes several implementations that cover many use cases: 
 
 ### `CircuitBreakerImpl` 
 

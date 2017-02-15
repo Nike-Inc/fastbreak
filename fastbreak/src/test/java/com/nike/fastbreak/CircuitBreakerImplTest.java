@@ -34,6 +34,7 @@ import java.util.function.Supplier;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -120,6 +121,19 @@ public class CircuitBreakerImplTest {
 
         // then
         verifyDefaultsForEverything(cb);
+    }
+
+    @Test
+    public void newManualModeTask_and_originatingCircuitBreaker_returns_original_circuit_breaker_instance() {
+        // given
+        CircuitBreakerImpl<String> cb = new CircuitBreakerImpl<>();
+
+        // when
+        CircuitBreaker.ManualModeTask<String> mmt = cb.newManualModeTask();
+
+        // then
+        assertThat(mmt).isSameAs(cb);
+        assertThat(mmt.originatingCircuitBreaker()).isSameAs(cb);
     }
 
     @Test
@@ -542,7 +556,8 @@ public class CircuitBreakerImplTest {
     }
 
     @Test
-    public void executeAsyncCall_does_not_time_out_the_call_if_it_takes_shorter_than_callTimeout() {
+    public void executeAsyncCall_does_not_time_out_the_call_if_it_takes_shorter_than_callTimeout()
+        throws InterruptedException {
         // given
         long callTimeoutMillis = 100;
         long callExecutionTimeMillis = 50;
@@ -571,6 +586,7 @@ public class CircuitBreakerImplTest {
         long endTimeMillis = System.currentTimeMillis();
 
         // then
+        Thread.sleep(callTimeoutMillis + 1); // Give the call timeout logic time to execute (if it were going to, which it shouldn't)
         assertThat(result.isCompletedExceptionally()).isFalse();
         assertThat(exThrownByFuture).isNull();
         assertThat((endTimeMillis - startTimeMillis)).isGreaterThanOrEqualTo(callExecutionTimeMillis);
@@ -606,6 +622,38 @@ public class CircuitBreakerImplTest {
 
         // then
         verify(scheduledFutureMock).cancel(false);
+    }
+
+    @Test
+    public void executeAsyncCall_does_not_cancel_timeout_check_if_future_takes_too_long() throws InterruptedException {
+        // given
+        long callTimeoutMillis = 100;
+        long callExecutionTimeMillis = 150;
+        Whitebox
+            .setInternalState(cbSpy, "callTimeoutNanos", Optional.of(Duration.ofMillis(callTimeoutMillis).toNanos()));
+        CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> {
+            try {
+                Thread.sleep(callExecutionTimeMillis);
+            }
+            catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            return "foo";
+        });
+        ScheduledExecutorService schedulerMock = mock(ScheduledExecutorService.class);
+        ScheduledFuture scheduledFutureMock = mock(ScheduledFuture.class);
+        doReturn(scheduledFutureMock).when(schedulerMock)
+                                     .schedule(any(Runnable.class), any(Long.class), any(TimeUnit.class));
+        doReturn(true).when(scheduledFutureMock).isDone();
+        Whitebox.setInternalState(cbSpy, "scheduler", schedulerMock);
+
+        // when
+        CompletableFuture<String> result = cbSpy.executeAsyncCall(() -> future);
+        result.join();
+        Thread.sleep(50); // have to give the cancellation logic time to run before checking
+
+        // then
+        verify(scheduledFutureMock, times(0)).cancel(anyBoolean());
     }
 
     @Test
