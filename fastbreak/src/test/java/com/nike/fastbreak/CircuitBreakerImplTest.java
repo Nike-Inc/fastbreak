@@ -31,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
+import static com.nike.fastbreak.CircuitBreaker.DEFAULT_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.Matchers.any;
@@ -75,9 +76,9 @@ public class CircuitBreakerImplTest {
         assertThat(cb.maxConsecutiveFailuresAllowed).isSameAs(cb.FALLBACK_DEFAULT_MAX_CONSECUTIVE_FAILURES_ALLOWED);
         assertThat(cb.resetTimeoutNanos).isEqualTo(Duration.ofSeconds(cb.DEFAULT_RESET_TIMEOUT_SECONDS).toNanos());
         assertThat(cb.callTimeoutNanos).isEqualTo(Optional.empty());
-        assertThat(cb.id).isSameAs(cb.DEFAULT_ID);
         assertThat(cb.breakingEventStrategy).isSameAs(cb.DEFAULT_BREAKING_EVENT_STRATEGY);
         assertThat(cb.breakingExceptionStrategy).isSameAs(cb.DEFAULT_BREAKING_EXCEPTION_STRATEGY);
+        assertDefaultGeneratedCircuitBreakerId(cb);
     }
 
     @Test
@@ -1088,9 +1089,9 @@ public class CircuitBreakerImplTest {
         assertThat(cb.maxConsecutiveFailuresAllowed).isSameAs(cb.FALLBACK_DEFAULT_MAX_CONSECUTIVE_FAILURES_ALLOWED);
         assertThat(cb.resetTimeoutNanos).isEqualTo(Duration.ofSeconds(cb.DEFAULT_RESET_TIMEOUT_SECONDS).toNanos());
         assertThat(cb.callTimeoutNanos).isEqualTo(Optional.empty());
-        assertThat(cb.id).isSameAs(cb.DEFAULT_ID);
         assertThat(cb.breakingEventStrategy).isSameAs(besMock);
         assertThat(cb.breakingExceptionStrategy).isSameAs(cb.DEFAULT_BREAKING_EXCEPTION_STRATEGY);
+        assertDefaultGeneratedCircuitBreakerId(cb);
     }
 
     @DataProvider(value = {
@@ -1133,5 +1134,10 @@ public class CircuitBreakerImplTest {
         assertThat(cb.id).isSameAs(id);
         assertThat(cb.breakingEventStrategy).isSameAs(eventStrategy);
         assertThat(cb.breakingExceptionStrategy).isSameAs(errorStrategy);
+    }
+
+    public static void assertDefaultGeneratedCircuitBreakerId(CircuitBreaker cb) {
+        assertThat(cb.getId()).startsWith(DEFAULT_ID + "-");
+        assertThat(cb.getId().length()).isEqualTo(DEFAULT_ID.length() + 37); // dash + UUID == 37 length
     }
 }
