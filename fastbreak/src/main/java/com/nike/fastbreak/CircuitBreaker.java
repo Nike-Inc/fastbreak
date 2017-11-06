@@ -102,6 +102,11 @@ import java.util.function.Supplier;
 public interface CircuitBreaker<ET> {
 
     /**
+     * The default return value for {@link #getId()} that will be used if not specified for a given circuit breaker instance.
+     */
+    public static final String DEFAULT_ID = "UNSPECIFIED";
+
+    /**
      * An all-in-one method to execute an async future call with circuit breaker protection.
      * <ul>
      *     <li>
@@ -229,6 +234,15 @@ public interface CircuitBreaker<ET> {
      * to OPEN.
      */
     CircuitBreaker<ET> onOpen(Runnable listener);
+
+    /**
+     * Identifier of the `CircuitBreaker` instance. This is implementation specific and there is no guarantee of uniqueness.
+     * <p>
+     * If not overridden by the implementation then {@link #DEFAULT_ID} will be returned.
+     */
+    default String getId(){
+        return DEFAULT_ID;
+    }
 
     /**
      * Interface describing the logic that determines whether or not an event is a "circuit breaker failure" that

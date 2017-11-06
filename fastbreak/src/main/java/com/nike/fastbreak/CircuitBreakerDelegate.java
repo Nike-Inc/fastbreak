@@ -120,6 +120,11 @@ public class CircuitBreakerDelegate<ET, Del_ET> implements CircuitBreaker<ET> {
         return this;
     }
 
+    @Override
+    public String getId() {
+        return delegate.getId();
+    }
+
     protected static class EventHolder<T> {
         public T event = null;
     }

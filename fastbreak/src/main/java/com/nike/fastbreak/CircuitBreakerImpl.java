@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -112,11 +113,6 @@ public class CircuitBreakerImpl<ET> implements CircuitBreaker<ET>, CircuitBreake
     public static final long FALLBACK_DEFAULT_RESET_TIMEOUT_SECONDS = 15;
 
     /**
-     * The default {@link #id} that will be used if not specified for a given circuit breaker instance.
-     */
-    public static final String DEFAULT_ID = "UNSPECIFIED";
-
-    /**
      * The default {@link BreakingEventStrategy} that will be used if not specified for a given circuit breaker
      * instance - assumes all events are successful/healthy events.
      */
@@ -214,7 +210,7 @@ public class CircuitBreakerImpl<ET> implements CircuitBreaker<ET>, CircuitBreake
      *                    {@link #executeBlockingCall(Callable)}) before a {@link CircuitBreakerTimeoutException} will
      *                    be thrown. If this is empty then calls will never timeout.
      * @param id The ID of this circuit breaker. Used in log messages to ID this instance. If this is empty then {@link
-     *           #DEFAULT_ID} will be used.
+     *           CircuitBreaker#DEFAULT_ID} + "-" + {@link UUID#randomUUID()} will be used.
      * @param breakingEventStrategy The function to decide whether an event contributes to the consecutive breaking
      *                              failures count or not.
      * @param breakingExceptionStrategy The function to decide whether an exception contributes to the consecutive
@@ -238,7 +234,7 @@ public class CircuitBreakerImpl<ET> implements CircuitBreaker<ET>, CircuitBreake
                                              .orElse(Duration.ofSeconds(DEFAULT_RESET_TIMEOUT_SECONDS).toNanos());
         this.resetTimeoutDurationString = Duration.ofNanos(this.resetTimeoutNanos).toString();
         this.callTimeoutNanos = callTimeout.map(Duration::toNanos);
-        this.id = id.orElse(DEFAULT_ID);
+        this.id = id.orElse(DEFAULT_ID + "-" + UUID.randomUUID().toString());
         //noinspection unchecked
         this.breakingEventStrategy =
             breakingEventStrategy.orElse((BreakingEventStrategy<ET>) DEFAULT_BREAKING_EVENT_STRATEGY);
@@ -467,6 +463,11 @@ public class CircuitBreakerImpl<ET> implements CircuitBreaker<ET>, CircuitBreake
     public CircuitBreakerImpl<ET> onOpen(Runnable listener) {
         onOpenListeners.add(listener);
         return this;
+    }
+
+    @Override
+    public String getId() {
+        return id;
     }
 
     protected CircuitBreakerTimeoutException generateNewCircuitBreakerTimeoutException(long timeoutNanos) {

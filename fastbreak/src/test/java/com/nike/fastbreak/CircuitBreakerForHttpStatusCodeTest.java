@@ -8,6 +8,7 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 
+import static com.nike.fastbreak.CircuitBreakerImplTest.assertDefaultGeneratedCircuitBreakerId;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
@@ -57,9 +58,9 @@ public class CircuitBreakerForHttpStatusCodeTest {
         assertThat(cb.maxConsecutiveFailuresAllowed).isSameAs(cb.FALLBACK_DEFAULT_MAX_CONSECUTIVE_FAILURES_ALLOWED);
         assertThat(cb.resetTimeoutNanos).isEqualTo(Duration.ofSeconds(cb.DEFAULT_RESET_TIMEOUT_SECONDS).toNanos());
         assertThat(cb.callTimeoutNanos).isEqualTo(Optional.empty());
-        assertThat(cb.id).isSameAs(cb.DEFAULT_ID);
         assertThat(cb.breakingEventStrategy).isSameAs(cb.DEFAULT_HTTP_RESPONSE_BREAKING_EVENT_STRATEGY);
         assertThat(cb.breakingExceptionStrategy).isSameAs(cb.DEFAULT_BREAKING_EXCEPTION_STRATEGY);
+        assertDefaultGeneratedCircuitBreakerId(cb);
     }
 
     @Test
@@ -73,9 +74,9 @@ public class CircuitBreakerForHttpStatusCodeTest {
         assertThat(cb.maxConsecutiveFailuresAllowed).isSameAs(cb.FALLBACK_DEFAULT_MAX_CONSECUTIVE_FAILURES_ALLOWED);
         assertThat(cb.resetTimeoutNanos).isEqualTo(Duration.ofSeconds(cb.DEFAULT_RESET_TIMEOUT_SECONDS).toNanos());
         assertThat(cb.callTimeoutNanos).isEqualTo(Optional.empty());
-        assertThat(cb.id).isSameAs(cb.DEFAULT_ID);
         assertThat(cb.breakingEventStrategy).isSameAs(cb.DEFAULT_HTTP_RESPONSE_BREAKING_EVENT_STRATEGY);
         assertThat(cb.breakingExceptionStrategy).isSameAs(cb.DEFAULT_BREAKING_EXCEPTION_STRATEGY);
+        assertDefaultGeneratedCircuitBreakerId(cb);
     }
 
     @Test

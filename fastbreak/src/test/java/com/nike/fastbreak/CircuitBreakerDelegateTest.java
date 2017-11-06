@@ -6,6 +6,7 @@ import org.mockito.ArgumentCaptor;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -21,6 +22,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests the functionality of {@link CircuitBreakerDelegate}
@@ -226,5 +228,19 @@ public class CircuitBreakerDelegateTest {
         // then
         verify(delegateMock).onOpen(listener);
         assertThat(result).isSameAs(wrapper);
+    }
+
+    @Test
+    public void getId_calls_delegate() {
+        // given
+        String generatedId = UUID.randomUUID().toString();
+        when(delegateMock.getId()).thenReturn(generatedId);
+
+        // when
+        String id = wrapper.getId();
+
+        // then
+        assertThat(id).isEqualTo(generatedId);
+        verify(delegateMock).getId();
     }
 }
