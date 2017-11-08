@@ -8,8 +8,17 @@ Fastbreak is used heavily and is stable internally at Nike, however the wider co
 
 #### 0.x Releases
 
-- `0.10.x` Releases - [0.10.0](#0100)
+- `0.10.x` Releases - [0.10.1](#0101), [0.10.0](#0100)
 - `0.9.x` Releases - [0.9.0](#090)
+
+## [0.10.1](https://github.com/Nike-Inc/fastbreak/releases/tag/fastbreak-v0.10.1)
+
+Released on 2017-11-08.
+
+### Added
+
+- Added default `getId` method to `CircuitBreaker` interface to identify each `CircuitBreaker` instance. This is implementation specific and there is no guarantee of uniqueness. If not overridden by the implementation then a default ID will be used. 
+	- Added by [Robert_Abeyta][contrib_rabeyta] in pull request [#7](https://github.com/Nike-Inc/fastbreak/pull/7).
 
 ## [0.10.0](https://github.com/Nike-Inc/fastbreak/releases/tag/fastbreak-v0.10.0)
 
@@ -31,3 +40,4 @@ Released on 2016-09-26.
 	
 
 [contrib_nicmunroe]: https://github.com/nicmunroe
+[contrib_rabeyta]: https://github.com/rabeyta
