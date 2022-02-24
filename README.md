@@ -2,10 +2,10 @@
 
 # Fastbreak - A Simple Java-8-Native Circuit Breaker
 
-[ ![Download](https://api.bintray.com/packages/nike/maven/fastbreak/images/download.svg) ](https://bintray.com/nike/maven/fastbreak/_latestVersion)
-[![][travis img]][travis]
-[![Code Coverage](https://img.shields.io/codecov/c/github/Nike-Inc/fastbreak/master.svg)](https://codecov.io/github/Nike-Inc/fastbreak?branch=master)
-[![][license img]][license]
+[![Maven Central][maven_central_img]][maven_central]
+[![Build][gh_action_build_img]][gh_action_build]
+[![Code Coverage][codecov_img]][codecov]
+[![License][license img]][license]
 
 <a name="overview"></a>
 A circuit breaker is typically used to help stabilize distributed systems by detecting when a downstream dependency is unhealthy and preventing calls to that service for a while to give it a chance to become healthy again. 
@@ -274,8 +274,14 @@ Fastbreak is a small project. It only has a few classes and they are all fully j
 
 Fastbreak is released under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-[travis]:https://travis-ci.org/Nike-Inc/fastbreak
-[travis img]:https://api.travis-ci.org/Nike-Inc/fastbreak.svg?branch=master
+[maven_central]:https://search.maven.org/search?q=g:com.nike.fastbreak
+[maven_central_img]:https://maven-badges.herokuapp.com/maven-central/com.nike.fastbreak/fastbreak/badge.svg?style=flat
+
+[gh_action_build]:https://github.com/Nike-Inc/fastbreak/actions/workflows/build.yml
+[gh_action_build_img]:https://github.com/Nike-Inc/fastbreak/actions/workflows/build.yml/badge.svg
+
+[codecov]:https://codecov.io/github/Nike-Inc/fastbreak?branch=main
+[codecov_img]:https://img.shields.io/codecov/c/github/Nike-Inc/fastbreak/main.svg
 
 [license]:LICENSE.txt
 [license img]:https://img.shields.io/badge/License-Apache%202-blue.svg

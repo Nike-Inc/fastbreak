@@ -1,25 +1,16 @@
 // ========== GRADLE PLUGINS / REPOSITORIES SETUP
 buildscript {
     repositories {
-        jcenter()
+        mavenCentral()
     }
     dependencies {
-        // STUFF FOR JACOCO
-        classpath 'com.palantir:jacoco-coverage:0.3.0'
-        // jacoco-coverage blows up unless you specify guava dependency
-        classpath 'com.google.guava:guava:18.0'
-        // Plugin for spitting out coverage numbers to the console
-        classpath 'com.github.ksoichiro:gradle-console-reporter:0.4.0'
-
-        // STUFF FOR BINTRAY
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6'
     }
 }
 
 allprojects {
     apply plugin: 'idea'
     apply plugin: 'java'
-    apply plugin: 'maven'
+    apply plugin: 'java-library'
     apply plugin: 'project-report'
 
     task sourcesJar(type: Jar, dependsOn: classes) {
@@ -36,12 +27,16 @@ allprojects {
         failOnError = false
     }
 
+    tasks.withType(Javadoc) {
+        options.addStringOption('Xdoclint:none', '-quiet')
+    }
+
     artifacts {
         archives sourcesJar, javadocJar
     }
 
     repositories {
-        jcenter()
+        mavenCentral()
     }
 
     idea {
@@ -51,8 +46,8 @@ allprojects {
     }
 
     // http://www.gradle.org/docs/current/userguide/java_plugin.html
-    sourceCompatibility = org.gradle.api.JavaVersion.VERSION_1_8
-    targetCompatibility = org.gradle.api.JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 // Disable jar, sourcesJar, and javadoc tasks for the root project - we only want them to run for submodules
@@ -70,23 +65,40 @@ ext {
     junitDataproviderVersion = '1.11.0'
 
     // JACOCO PROPERTIES
-    jacocoToolVersion = '0.7.7.201606060606'
-    // Anything in this jacocoExclusions list will be excluded from coverage reports.
+    jacocoToolVersion = '0.8.4'
+    // Anything in this jacocoExclusions list will be excluded from coverage reports. The format is paths to class
+    //      files, with wildcards allowed. e.g.: jacocoExclusions = [ "com/nike/Foo.class", "**/Bar*.*" ]
     jacocoExclusions = []
     jacocoCoverageThresholdSetup = {
-        configure(subprojects) {
-            jacocoCoverage {
-                // Enforce minimum code coverage. See https://github.com/palantir/gradle-jacoco-coverage for the full list of options.
-                reportThreshold 0.95, INSTRUCTION
-                reportThreshold 0.95, BRANCH
+        configure(subprojects.findAll { isSubprojectIncludedInJacocoReports(it) }) {
+            // Configure the minimum code coverage rules.
+            jacocoTestCoverageVerification { JacocoCoverageVerification v ->
+                violationRules {
+                    rule { JacocoViolationRule r ->
+                        enabled = true
+                        limit {
+                            minimum = 0.95
+                            counter = "INSTRUCTION"
+                        }
+                    }
+
+                    rule { JacocoViolationRule r ->
+                        enabled = true
+                        limit {
+                            minimum = 0.95
+                            counter = "BRANCH"
+                        }
+                    }
+                }
             }
         }
     }
 
-    // BINTRAY STUFF
-    bintrayUser = project.hasProperty('bintrayUser') ? property('bintrayUser') : 'UNDEFINED'
-    bintrayKey = project.hasProperty('bintrayKey') ? property('bintrayKey') : 'UNDEFINED'
-    bintrayVersion = "$version"
+    // Configure which subprojects we're doing jacoco for.
+    isSubprojectIncludedInJacocoReports = { Project subProj ->
+        // For this repo we'll include everything that's not a sample or testonly module.
+        return !subProj.name.startsWith("sample") && !subProj.getName().startsWith("testonly")
+    }
 }
 
 // ========== COMBO TEST REPORT - View the combined/merged report at: [project_root]/build/reports/tests/index.html
@@ -95,9 +107,6 @@ apply from: file(rootProject.projectDir.getAbsolutePath() + '/gradle/junitComboT
 // ========== JACOCO SETUP - View the combined/merged report at: [project_root]/build/reports/jacoco/jacocoRootReport/html/index.html.
 //                           Individual reports for each submodule can be found at: [project_root]/[submodule]/build/reports/jacoco/test/html/index.html
 apply from: file(rootProject.projectDir.getAbsolutePath() + '/gradle/jacoco.gradle')
-
-// ========== BINTRAY PUBLISHING
-apply from: file(rootProject.projectDir.getAbsolutePath() + '/gradle/bintrayPublishing.gradle')
 
 // ========== MISCELLANEOUS BUILD STUFF
 allprojects {

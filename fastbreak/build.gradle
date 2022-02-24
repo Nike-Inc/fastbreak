@@ -1,11 +1,11 @@
 evaluationDependsOn(':')
 
 dependencies {
-    compile(
+    api(
             "org.slf4j:slf4j-api:$slf4jVersion"
     )
 
-    testCompile (
+    testImplementation(
             "junit:junit-dep:$junitVersion",
             "org.mockito:mockito-core:$mockitoVersion",
             "org.assertj:assertj-core:$assertJVersion",
