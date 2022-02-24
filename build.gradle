@@ -10,7 +10,6 @@ buildscript {
 allprojects {
     apply plugin: 'idea'
     apply plugin: 'java'
-    apply plugin: 'maven'
     apply plugin: 'project-report'
 
     task sourcesJar(type: Jar, dependsOn: classes) {
