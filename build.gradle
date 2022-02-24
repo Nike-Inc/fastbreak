@@ -57,7 +57,7 @@ javadocJar.enabled = false
 
 // ========== PROPERTIES FOR GRADLE BUILD - DEPENDENCY VERSIONS / ETC
 ext {
-    slf4jVersion = '1.7.21'
+    slf4jVersion = '1.7.36'
 
     junitVersion = '4.11'
     mockitoVersion = '1.10.19'
