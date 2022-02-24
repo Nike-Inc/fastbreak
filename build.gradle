@@ -27,6 +27,10 @@ allprojects {
         failOnError = false
     }
 
+    tasks.withType(Javadoc) {
+        options.addStringOption('Xdoclint:none', '-quiet')
+    }
+
     artifacts {
         archives sourcesJar, javadocJar
     }
@@ -60,27 +64,49 @@ ext {
     assertJVersion = '3.5.2'
     junitDataproviderVersion = '1.11.0'
 
-//    // JACOCO PROPERTIES
-//    jacocoToolVersion = '0.7.7.201606060606'
-//    // Anything in this jacocoExclusions list will be excluded from coverage reports.
-//    jacocoExclusions = []
-//    jacocoCoverageThresholdSetup = {
-//        configure(subprojects) {
-//            jacocoCoverage {
-//                // Enforce minimum code coverage. See https://github.com/palantir/gradle-jacoco-coverage for the full list of options.
-//                reportThreshold 0.95, INSTRUCTION
-//                reportThreshold 0.95, BRANCH
-//            }
-//        }
-//    }
+    // JACOCO PROPERTIES
+    jacocoToolVersion = '0.8.4'
+    // Anything in this jacocoExclusions list will be excluded from coverage reports. The format is paths to class
+    //      files, with wildcards allowed. e.g.: jacocoExclusions = [ "com/nike/Foo.class", "**/Bar*.*" ]
+    jacocoExclusions = []
+    jacocoCoverageThresholdSetup = {
+        configure(subprojects.findAll { isSubprojectIncludedInJacocoReports(it) }) {
+            // Configure the minimum code coverage rules.
+            jacocoTestCoverageVerification { JacocoCoverageVerification v ->
+                violationRules {
+                    rule { JacocoViolationRule r ->
+                        enabled = true
+                        limit {
+                            minimum = 0.95
+                            counter = "INSTRUCTION"
+                        }
+                    }
+
+                    rule { JacocoViolationRule r ->
+                        enabled = true
+                        limit {
+                            minimum = 0.95
+                            counter = "BRANCH"
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Configure which subprojects we're doing jacoco for.
+    isSubprojectIncludedInJacocoReports = { Project subProj ->
+        // For this repo we'll include everything that's not a sample or testonly module.
+        return !subProj.name.startsWith("sample") && !subProj.getName().startsWith("testonly")
+    }
 }
 
-//// ========== COMBO TEST REPORT - View the combined/merged report at: [project_root]/build/reports/tests/index.html
-//apply from: file(rootProject.projectDir.getAbsolutePath() + '/gradle/junitComboTestReport.gradle')
-//
-//// ========== JACOCO SETUP - View the combined/merged report at: [project_root]/build/reports/jacoco/jacocoRootReport/html/index.html.
-////                           Individual reports for each submodule can be found at: [project_root]/[submodule]/build/reports/jacoco/test/html/index.html
-//apply from: file(rootProject.projectDir.getAbsolutePath() + '/gradle/jacoco.gradle')
+// ========== COMBO TEST REPORT - View the combined/merged report at: [project_root]/build/reports/tests/index.html
+apply from: file(rootProject.projectDir.getAbsolutePath() + '/gradle/junitComboTestReport.gradle')
+
+// ========== JACOCO SETUP - View the combined/merged report at: [project_root]/build/reports/jacoco/jacocoRootReport/html/index.html.
+//                           Individual reports for each submodule can be found at: [project_root]/[submodule]/build/reports/jacoco/test/html/index.html
+apply from: file(rootProject.projectDir.getAbsolutePath() + '/gradle/jacoco.gradle')
 
 // ========== MISCELLANEOUS BUILD STUFF
 allprojects {
