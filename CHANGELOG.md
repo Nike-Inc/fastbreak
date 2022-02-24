@@ -8,8 +8,18 @@ Fastbreak is used heavily and is stable internally at Nike, however the wider co
 
 #### 0.x Releases
 
-- `0.10.x` Releases - [0.10.2](#0102), [0.10.1](#0101), [0.10.0](#0100)
+- `0.10.x` Releases - [0.10.3](#0103), [0.10.2](#0102), [0.10.1](#0101), [0.10.0](#0100)
 - `0.9.x` Releases - [0.9.0](#090)
+
+## [0.10.3](https://github.com/Nike-Inc/fastbreak/releases/tag/fastbreak-v0.10.3)
+
+Released on 2022-02-24.
+
+### Updated
+
+* Updated dependency versions to the latest for transitive dependencies exported by Fastbreak:
+	- SLF4J `1.7.21` -> `1.7.36`
+	- Updated by [Nic Munroe][contrib_nicmunroe] in pull request [#13](https://github.com/Nike-Inc/fastbreak/pull/13).
 
 ## [0.10.2](https://github.com/Nike-Inc/fastbreak/releases/tag/fastbreak-v0.10.2)
 
