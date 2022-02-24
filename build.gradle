@@ -69,19 +69,19 @@ ext {
     assertJVersion = '3.5.2'
     junitDataproviderVersion = '1.11.0'
 
-    // JACOCO PROPERTIES
-    jacocoToolVersion = '0.7.7.201606060606'
-    // Anything in this jacocoExclusions list will be excluded from coverage reports.
-    jacocoExclusions = []
-    jacocoCoverageThresholdSetup = {
-        configure(subprojects) {
-            jacocoCoverage {
-                // Enforce minimum code coverage. See https://github.com/palantir/gradle-jacoco-coverage for the full list of options.
-                reportThreshold 0.95, INSTRUCTION
-                reportThreshold 0.95, BRANCH
-            }
-        }
-    }
+//    // JACOCO PROPERTIES
+//    jacocoToolVersion = '0.7.7.201606060606'
+//    // Anything in this jacocoExclusions list will be excluded from coverage reports.
+//    jacocoExclusions = []
+//    jacocoCoverageThresholdSetup = {
+//        configure(subprojects) {
+//            jacocoCoverage {
+//                // Enforce minimum code coverage. See https://github.com/palantir/gradle-jacoco-coverage for the full list of options.
+//                reportThreshold 0.95, INSTRUCTION
+//                reportThreshold 0.95, BRANCH
+//            }
+//        }
+//    }
 
     // BINTRAY STUFF
     bintrayUser = project.hasProperty('bintrayUser') ? property('bintrayUser') : 'UNDEFINED'
@@ -89,15 +89,15 @@ ext {
     bintrayVersion = "$version"
 }
 
-// ========== COMBO TEST REPORT - View the combined/merged report at: [project_root]/build/reports/tests/index.html
-apply from: file(rootProject.projectDir.getAbsolutePath() + '/gradle/junitComboTestReport.gradle')
-
-// ========== JACOCO SETUP - View the combined/merged report at: [project_root]/build/reports/jacoco/jacocoRootReport/html/index.html.
-//                           Individual reports for each submodule can be found at: [project_root]/[submodule]/build/reports/jacoco/test/html/index.html
-apply from: file(rootProject.projectDir.getAbsolutePath() + '/gradle/jacoco.gradle')
-
-// ========== BINTRAY PUBLISHING
-apply from: file(rootProject.projectDir.getAbsolutePath() + '/gradle/bintrayPublishing.gradle')
+//// ========== COMBO TEST REPORT - View the combined/merged report at: [project_root]/build/reports/tests/index.html
+//apply from: file(rootProject.projectDir.getAbsolutePath() + '/gradle/junitComboTestReport.gradle')
+//
+//// ========== JACOCO SETUP - View the combined/merged report at: [project_root]/build/reports/jacoco/jacocoRootReport/html/index.html.
+////                           Individual reports for each submodule can be found at: [project_root]/[submodule]/build/reports/jacoco/test/html/index.html
+//apply from: file(rootProject.projectDir.getAbsolutePath() + '/gradle/jacoco.gradle')
+//
+//// ========== BINTRAY PUBLISHING
+//apply from: file(rootProject.projectDir.getAbsolutePath() + '/gradle/bintrayPublishing.gradle')
 
 // ========== MISCELLANEOUS BUILD STUFF
 allprojects {
