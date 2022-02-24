@@ -46,8 +46,8 @@ allprojects {
     }
 
     // http://www.gradle.org/docs/current/userguide/java_plugin.html
-    sourceCompatibility = org.gradle.api.JavaVersion.VERSION_1_8
-    targetCompatibility = org.gradle.api.JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 // Disable jar, sourcesJar, and javadoc tasks for the root project - we only want them to run for submodules
