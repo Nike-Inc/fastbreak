@@ -8,10 +8,25 @@ Fastbreak is used heavily and is stable internally at Nike, however the wider co
 
 #### 0.x Releases
 
-- `0.10.x` Releases - [0.10.1](#0101), [0.10.0](#0100)
+- `0.10.x` Releases - [0.10.2](#0102), [0.10.1](#0101), [0.10.0](#0100)
 - `0.9.x` Releases - [0.9.0](#090)
 
+## [0.10.2](https://github.com/Nike-Inc/fastbreak/releases/tag/fastbreak-v0.10.2)
+
+Released on 2022-02-24.
+
+### Project Build
+
+- Cleaned up bit-rot and generally de-rusted the project. The main changes were bringing the project up to gradle 
+  `7.4`, migrating to Github Actions for CI build, and setting things up to publish directly to Maven Central.  
+    - Cleaned up by [Nic Munroe][contrib_nicmunroe] in pull requests 
+      [#9](https://github.com/Nike-Inc/fastbreak/pull/9), [#10](https://github.com/Nike-Inc/fastbreak/pull/10), and
+	  [#11](https://github.com/Nike-Inc/fastbreak/pull/11).
+
 ## [0.10.1](https://github.com/Nike-Inc/fastbreak/releases/tag/fastbreak-v0.10.1)
+
+_**NOTE: This version was only published to JCenter. It does not exist on Maven Central. For a Maven Central 
+version you'll need to update to Fastbreak version `0.10.2` or later.**_
 
 Released on 2017-11-08.
 
